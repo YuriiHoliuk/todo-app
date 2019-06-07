@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import { TodoList } from './components/TodoList';
+
 const BASE_URL = 'https://jsonplaceholder.typicode.com';
 
 export class App extends Component {
@@ -25,7 +26,7 @@ export class App extends Component {
     this.setState(prevState => ({
       todos: JSON.parse(xhr.responseText),
       isTODOSLoaded: true,
-      loadingCount: --prevState.loadingCount
+      loadingCount: prevState.loadingCount - 1,
     }));
   };
 
@@ -33,7 +34,7 @@ export class App extends Component {
     this.setState(prevState => ({
       users: JSON.parse(xhr.responseText),
       isUsersLoaded: true,
-      loadingCount: --prevState.loadingCount
+      loadingCount: prevState.loadingCount - 1,
     }));
   };
 
@@ -43,7 +44,7 @@ export class App extends Component {
     xhr.open('GET', url);
     xhr.addEventListener('load', cb(xhr));
     xhr.send();
-    this.setState(prevState => ({ loadingCount: ++prevState.loadingCount }));
+    this.setState(prevState => ({ loadingCount: prevState.loadingCount + 1 }));
   }
 
   render() {
@@ -70,16 +71,15 @@ export class App extends Component {
 
     if (!isLoaded) {
       return button;
-    } else {
-      const usersMap = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
-      const todosWithUsers = todos.map(todo => ({ ...todo, user: usersMap[todo.userId] }));
-
-      return (
-        <>
-          {button}
-          <TodoList todos={todosWithUsers} />
-        </>
-      );
     }
+    const usersMap = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
+    const todosWithUsers = todos.map(todo => ({ ...todo, user: usersMap[todo.userId] }));
+
+    return (
+      <>
+        {button}
+        <TodoList todos={todosWithUsers} />
+      </>
+    );
   }
 }

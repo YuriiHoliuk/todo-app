@@ -1,7 +1,7 @@
 import React from 'react';
 import { User } from './User';
 
-export const TodoItem = props => {
+export const TodoItem = (props) => {
   const {
     title,
     completed,

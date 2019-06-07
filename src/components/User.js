@@ -1,6 +1,6 @@
 import React from 'react';
 
-export const User = props => {
+export const User = (props) => {
   const {
     name,
     email,
