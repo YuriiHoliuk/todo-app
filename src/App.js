@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import './App.css';
 import { TodoList } from './components/TodoList';
+import Search from './components/Search';
 
 const BASE_URL = 'https://jsonplaceholder.typicode.com';
 
@@ -14,6 +15,9 @@ export class App extends Component {
       isTODOSLoaded: false,
       isUsersLoaded: false,
       loadingCount: 0,
+      todosWithUsers: null,
+      filteredTodosWithUsers: null,
+      searchBy: ''
     };
   }
 
@@ -31,11 +35,14 @@ export class App extends Component {
   };
 
   handleUsersLoad = xhr => () => {
-    this.setState(prevState => ({
-      users: JSON.parse(xhr.responseText),
-      isUsersLoaded: true,
-      loadingCount: prevState.loadingCount - 1,
-    }));
+    this.setState(
+      prevState => ({
+        users: JSON.parse(xhr.responseText),
+        isUsersLoaded: true,
+        loadingCount: prevState.loadingCount - 1,
+      }),
+      this.checkData
+    );
   };
 
   makeRequest(url, cb) {
@@ -47,16 +54,41 @@ export class App extends Component {
     this.setState(prevState => ({ loadingCount: prevState.loadingCount + 1 }));
   }
 
+  search = (event) => {
+    const searchBy = event.target.value;
+
+    this.setState(prevState => {
+      const filteredTodosWithUsers = prevState.todosWithUsers.filter(todo => todo.title.includes(searchBy));
+      return {
+        searchBy,
+        filteredTodosWithUsers,
+      };
+    });
+  }
+
+  checkData() {
+    const { isTODOSLoaded, isUsersLoaded, users, todos } = this.state;
+    if (isTODOSLoaded && isUsersLoaded) {
+      const usersMap = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
+      const todosWithUsers = todos.map(todo => ({ ...todo, user: usersMap[todo.userId] }));
+      this.setState({
+        filteredTodosWithUsers: todosWithUsers,
+        todosWithUsers,
+      });
+    }
+
+  }
+
   render() {
     const {
       isTODOSLoaded,
       isUsersLoaded,
-      todos,
-      users,
       loadingCount,
+      filteredTodosWithUsers,
+      searchBy
     } = this.state;
 
-    const isLoaded = isTODOSLoaded && isUsersLoaded;
+    const isLoaded = isTODOSLoaded && isUsersLoaded && filteredTodosWithUsers !== null;
     const isLoading = loadingCount !== 0;
 
     const button = (
@@ -72,13 +104,12 @@ export class App extends Component {
     if (!isLoaded) {
       return button;
     }
-    const usersMap = users.reduce((acc, user) => ({ ...acc, [user.id]: user }), {});
-    const todosWithUsers = todos.map(todo => ({ ...todo, user: usersMap[todo.userId] }));
 
     return (
       <>
+        <Search search={this.search} value={searchBy} />
         {button}
-        <TodoList todos={todosWithUsers} />
+        <TodoList todos={filteredTodosWithUsers} />
       </>
     );
   }
